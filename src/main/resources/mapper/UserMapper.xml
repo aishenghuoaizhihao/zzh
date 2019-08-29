@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.user.mapper.UserMapper">
+
+    <select id="selectPageVo" resultType="User">
+        SELECT id,name FROM user <!--WHERE state=#{state}-->
+    </select>
+
+    <sql id="">
+
+    </sql>
+
+    <!-- 批量保存(foreach插入多条数据两种方法) int addEmpsBatch(@Param("emps") List<Employee> emps); -->
+    <!-- MySQL下批量保存，可以foreach遍历 mysql支持values(),(),()语法 -->
+    <insert id="inserUsers">
+        INSERT INTO `user`(id,name,age,email)
+        VALUES
+        <foreach collection="list" item="user" separator=",">
+        (#{user.id},#{user.name},#{user.age},#{user.email})
+        </foreach>
+    </insert>
+
+
+    <!-- 批量删除 -->
+    <delete id="deleteUsers">
+        <!-- delete from emp where empno in(7789,7790) -->
+        <!-- forEach : 用来循环 collection : 用来指定循环的数据的类型 可以填的值有：array,list,map item
+            : 循环中为每个循环的数据指定一个别名 index : 循环中循环的下标 open : 开始 close : 结束 separator : 数组中元素之间的分隔符 -->
+        delete from `user` where id  in
+        <foreach collection="list" item="arr" index="no" open="(" separator="," close=")">
+            #{arr}
+        </foreach>
+
+
+
+    </delete>
+
+    <update id="updateUsers" parameterType="java.util.List">
+        update `user`
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="id =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.id !=null and item.status != -1">
+                        when id=#{item.id} then #{item.status}
+                    </if>
+                    <if test="item.status == null or item.status == -1">
+                        when id=#{item.id} then mydata_table.status//原数据
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.id,jdbcType=BIGINT}
+        </foreach>
+    </update>
+
+
+
+</mapper>
